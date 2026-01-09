@@ -195,3 +195,4 @@ resource "aws_instance" "postgres" {
 
   tags = { Name = "postgres-db" }
 }
+

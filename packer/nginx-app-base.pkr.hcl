@@ -8,7 +8,7 @@ packer {
 }
 
 variable "region" {
-  default = "eu-west-1"
+  default = "us-east-2"
 }
 
 source "amazon-ebs" "base" {
