@@ -1,0 +1,95 @@
+pipeline {
+    agent any 
+
+
+    parameters {
+        choice (
+            name: 'TF_ACTION',
+            choices :['plan','apply', 'destroy'],
+            description: 'Select which Terraform action to run'
+        )
+    }
+    
+    environment {
+        
+        AWS_SECRET_ACCESS_KEY = credentials ('aws-secret-access-key')
+        AWS_ACCESS_KEY_ID = credentials ('aws-access-key-id')
+        AWS_DEFAULT_REGION = 'us-east-2'
+    }
+    
+   stages {
+
+        stage('checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+     stage('Prepare Terraform Vars') {
+            steps {
+                dir('terraform') {
+                    writeFile file: 'terraform.tfvars', text: """
+                        nginx_ami_id  = "${env.NGINX_AMI_ID}"
+                        java_ami_id   = "${env.JAVA_AMI_ID}"
+                        python_ami_id = "${env.PYTHON_AMI_ID}"
+                """
+                    sh 'cat terraform.tfvars'
+                }
+            }
+        }
+
+
+        stage('terraform init') {
+            steps {
+                dir('terraform') {
+                    sh 'terraform init -reconfigure'
+                }
+            }
+        }
+
+        stage('terraform validate') {
+            steps {
+                dir('terraform') {
+                    sh 'terraform validate'
+                }
+            }
+        }
+
+       
+        stage('terraform plan') {
+            when {
+                expression { params.TF_ACTION == 'plan' }
+            }
+            steps {
+                dir('terraform') {
+                    sh 'terraform plan -var-file="terraform.tfvars"'
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            when {
+                expression { params.TF_ACTION == 'apply' }
+            }
+            steps {
+                dir('terraform') {
+                    sh """
+                        terraform apply -var-file="terraform.tfvars" -auto-approve
+                    """
+                }
+            }
+        }
+
+        stage('terraform destroy') {
+            when {
+                expression { params.TF_ACTION == 'destroy' }
+            }
+            steps {
+                dir('terraform') {
+                    sh 'terraform destroy -var-file="terraform.tfvars"   -auto-approve'
+                }
+            }
+        }
+
+    } // end stages
+} // end pipeline
