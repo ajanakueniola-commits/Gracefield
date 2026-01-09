@@ -32,7 +32,7 @@ resource "aws_internet_gateway" "igw" {
 # Subnets
 ####################
 resource "aws_subnet" "public" {
-  count                   = 2
+  count                   = 1
   vpc_id                  = aws_vpc.grace.id
   cidr_block              = var.public_subnets[count.index]
   availability_zone       = var.azs[count.index]
@@ -41,7 +41,7 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_subnet" "private" {
-  count             = 2
+  count             = 1
   vpc_id            = aws_vpc.grace.id
   cidr_block        = var.private_subnets[count.index]
   availability_zone = var.azs[count.index]
@@ -61,7 +61,7 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "public_assoc" {
-  count          = 2
+  count          = 1
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
