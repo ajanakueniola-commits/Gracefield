@@ -18,7 +18,7 @@ pipeline {
         stage('packer init') {
             steps {
                 dir('packer') {
-                    sh 'packer init aws-nginx-python.pkr.hcl'
+                    sh 'packer init nginx-app-base.pkr.hcl'
                 }
             }
         }
