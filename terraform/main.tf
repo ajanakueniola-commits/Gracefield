@@ -3,16 +3,29 @@ provider "aws" {
 }
 
 ####################
+# AMI Lookup
+####################
+data "aws_ami" "packer_or_amazon" {
+  most_recent = true
+  owners      = var.packer_ami_owner != "" ? [var.packer_ami_owner] : ["amazon"]
+
+  filter {
+    name   = "name"
+    values = var.packer_ami_name_pattern != "" ? [var.packer_ami_name_pattern] : ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+####################
 # VPC
 ####################
 resource "aws_vpc" "grace" {
   cidr_block = var.vpc_cidr
-  tags = { Name = "grace-vpc" }
+  tags       = { Name = "grace-vpc" }
 }
 
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.grace.id
-  tags = { Name = "grace-IGW" }
+  tags   = { Name = "grace-IGW" }
 }
 
 ####################
@@ -36,7 +49,7 @@ resource "aws_subnet" "private" {
 }
 
 ####################
-# Route Tables
+# Route Table
 ####################
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.grace.id
@@ -54,11 +67,13 @@ resource "aws_route_table_association" "public_assoc" {
 }
 
 ####################
-# Security Group
+# Security Groups
 ####################
 resource "aws_security_group" "grace" {
   vpc_id = aws_vpc.grace.id
+  name   = "grace-sg"
 
+  # SSH
   ingress {
     from_port   = 22
     to_port     = 22
@@ -66,6 +81,7 @@ resource "aws_security_group" "grace" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # HTTP
   ingress {
     from_port   = 80
     to_port     = 80
@@ -73,6 +89,7 @@ resource "aws_security_group" "grace" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # PostgreSQL (private access only)
   ingress {
     from_port   = 5432
     to_port     = 5432
@@ -91,108 +108,90 @@ resource "aws_security_group" "grace" {
 }
 
 ####################
-# Launch Templates
+# NGINX Instances (Public)
 ####################
-resource "aws_launch_template" "nginx" {
-  name_prefix   = "nginx-"
-  image_id      = var.ami_id
-  instance_type = var.instance_type
+resource "aws_instance" "nginx" {
+  count                       = 1
+  ami                         = var.ami_id != "" ? var.ami_id : data.aws_ami.packer_or_amazon.id
+  instance_type               = var.instance_type
+  subnet_id                   = aws_subnet.public[count.index].id
+  vpc_security_group_ids      = [aws_security_group.grace.id]
+  associate_public_ip_address = true
+
+  user_data = <<-EOF
+    #!/bin/bash
+    yum update -y
+    amazon-linux-extras install -y nginx1
+    systemctl enable nginx
+    systemctl start nginx
+    echo "Hello from nginx instance ${count.index}" > /usr/share/nginx/html/index.html
+  EOF
+
+  tags = { Name = "nginx-${count.index}" }
+}
+
+####################
+# App Instances (Private)
+####################
+resource "aws_instance" "app" {
+  count                  = 1
+  ami                    = var.ami_id != "" ? var.ami_id : data.aws_ami.packer_or_amazon.id
+  instance_type          = var.instance_type
+  subnet_id              = aws_subnet.private[count.index].id
   vpc_security_group_ids = [aws_security_group.grace.id]
 
-  user_data = base64encode(<<EOF
-#!/bin/bash
-systemctl start nginx
-EOF
-)
-}
+  user_data = <<-EOF
+    #!/bin/bash
+    yum update -y
+    amazon-linux-extras install -y python3
+    python3 -m venv /opt/venv
+    source /opt/venv/bin/activate
+    pip install flask
+  EOF
 
-resource "aws_launch_template" "app" {
-  name_prefix   = "app-"
-  image_id      = var.ami_id
-  instance_type = var.instance_type
-  vpc_security_group_ids = [aws_security_group.grace.id]
-}
-
-####################
-# Auto Scaling Groups
-####################
-resource "aws_autoscaling_group" "nginx" {
-  desired_capacity = 2
-  max_size         = 2
-  min_size         = 2
-  vpc_zone_identifier = aws_subnet.public[*].id
-
-  launch_template {
-    id      = aws_launch_template.nginx.id
-    version = "$Latest"
-  }
-}
-
-resource "aws_autoscaling_group" "app" {
-  desired_capacity = 2
-  max_size         = 2
-  min_size         = 2
-  vpc_zone_identifier = aws_subnet.private[*].id
-
-  launch_template {
-    id      = aws_launch_template.app.id
-    version = "$Latest"
-  }
+  tags = { Name = "app-${count.index}" }
 }
 
 ####################
-# Application Load Balancer
-####################
-resource "aws_lb" "nginx" {
-  name               = "grace-nginx-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.grace.id]
-  subnets            = aws_subnet.public[*].id
-}
-
-resource "aws_lb_target_group" "nginx" {
-  name     = "nginx-tg"
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.grace.id
-}
-
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.nginx.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.nginx.arn
-  }
-}
-
-resource "aws_autoscaling_attachment" "nginx" {
-  autoscaling_group_name = aws_autoscaling_group.nginx.name
-  lb_target_group_arn   = aws_lb_target_group.nginx.arn
-}
-
-####################
-# Jenkins Server
+# Jenkins Instance (Public)
 ####################
 resource "aws_instance" "jenkins" {
-  ami           = var.ami_id
-  instance_type = var.instance_type
-  subnet_id     = aws_subnet.public[0].id
+  ami                    = var.ami_id != "" ? var.ami_id : data.aws_ami.packer_or_amazon.id
+  instance_type          = var.instance_type
+  subnet_id              = aws_subnet.public[0].id
   vpc_security_group_ids = [aws_security_group.grace.id]
+
+  user_data = <<-EOF
+    #!/bin/bash
+    yum update -y
+    amazon-linux-extras install -y java-openjdk11
+    yum install -y git wget
+    wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+    rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+    yum install -y jenkins
+    systemctl enable jenkins
+    systemctl start jenkins
+  EOF
+
   tags = { Name = "jenkins" }
 }
 
 ####################
-# PostgreSQL Server
+# PostgreSQL Instance (Private)
 ####################
 resource "aws_instance" "postgres" {
-  ami           = var.ami_id
-  instance_type = var.instance_type
-  subnet_id     = aws_subnet.private[0].id
+  ami                    = var.ami_id != "" ? var.ami_id : data.aws_ami.packer_or_amazon.id
+  instance_type          = var.instance_type
+  subnet_id              = aws_subnet.private[0].id
   vpc_security_group_ids = [aws_security_group.grace.id]
+
+  user_data = <<-EOF
+    #!/bin/bash
+    yum update -y
+    amazon-linux-extras install -y postgresql13
+    systemctl enable postgresql
+    systemctl start postgresql
+  EOF
+
   tags = { Name = "postgres-db" }
 }
-    
