@@ -8,10 +8,10 @@ output "app_private_ips" {
   value       = aws_instance.app[*].private_ip
 }
 
-output "jenkins_public_ip" {
-  description = "Public IP of Jenkins"
-  value       = aws_instance.jenkins.public_ip
-}
+# output "jenkins_public_ip" {
+#   description = "Public IP of Jenkins"
+#   value       = aws_instance.jenkins.public_ip
+# }
 
 output "postgres_private_ip" {
   description = "Private IP of PostgreSQL server"
