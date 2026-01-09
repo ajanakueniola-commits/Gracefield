@@ -90,6 +90,3 @@ variable "ami_id" {
   description = "Optional explicit AMI ID to use"
   default     = ""
 }
-variable "key_name" {
-  description = "SSH key pair name"
-}
