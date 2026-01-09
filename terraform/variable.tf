@@ -1,5 +1,5 @@
 # variable "region" {
-#   default = "eu-west-1"
+#   default = "us-east-2"
 # }
 
 # variable "packer_ami_name_pattern" {
@@ -34,7 +34,7 @@
 # }
 
 # variable "azs" {
-#   default = ["eu-west-1a", "eu-west-1b"]
+#   default = ["us-east-2a", "us-east-2b"]
 # }
 # variable "key_name" {
 #   description = "Name of the SSH key pair"
@@ -45,7 +45,7 @@
 
 variable "region" {
   description = "AWS region"
-  default     = "eu-west-1"
+  default     = "us-east-2"
 }
 
 variable "vpc_cidr" {
@@ -68,12 +68,12 @@ variable "private_subnets" {
 variable "azs" {
   description = "Availability zones"
   type        = list(string)
-  default     = ["eu-west-1a", "eu-west-1b"]
+  default     = ["us-east-2a", "us-east-2b"]
 }
 
 variable "instance_type" {
   description = "EC2 instance type"
-  default     = "t3.micro"
+  default     = "c7i-flex.large"
 }
 
 variable "packer_ami_name_pattern" {
