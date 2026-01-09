@@ -8,12 +8,12 @@ packer {
 }
 
 variable "region" {
-  default = "us-east-2"
+  default = "eu-west-1"
 }
 
 source "amazon-ebs" "base" {
   region        = var.region
-  instance_type = "c7i-flex.large"
+  instance_type = "t3.micro"
   ssh_username  = "ec2-user"
   ami_name      = "grace-base-ami-{{timestamp}}"
 
