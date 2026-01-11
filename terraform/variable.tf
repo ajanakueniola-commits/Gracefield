@@ -125,15 +125,3 @@ variable "private_subnet_cidrs" {
     "10.0.4.0/24"
   ]
 }
-variable "db_username" {
-  description = "Username for the PostgreSQL database"
-  type        = string
-  default     = "postgres"
-}
-
-variable "db_password" {
-  description = "Password for the PostgreSQL database"
-  type        = string
-  sensitive   = true
-}
-
