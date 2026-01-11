@@ -13,7 +13,7 @@ variable "region" {
 
 source "amazon-ebs" "base" {
   region        = var.region
-  instance_type = "t3.micro"
+  instance_type = "c7i-flex.large"
   ssh_username  = "ec2-user"
   ami_name      = "grace-base-ami-{{timestamp}}"
 

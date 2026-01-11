@@ -184,20 +184,54 @@ resource "aws_instance" "app" {
 ####################
 # PostgreSQL Instance (Private)
 ####################
-resource "aws_instance" "postgres" {
-  ami                    = var.ami_id != "" ? var.ami_id : data.aws_ami.packer_or_amazon.id
-  instance_type          = var.instance_type
-  subnet_id              = aws_subnet.private[0].id
-  vpc_security_group_ids = [aws_security_group.grace.id]
+# resource "aws_instance" "postgres" {
+#   ami                    = var.ami_id != "" ? var.ami_id : data.aws_ami.packer_or_amazon.id
+#   instance_type          = var.instance_type
+#   subnet_id              = aws_subnet.private[0].id
+#   vpc_security_group_ids = [aws_security_group.grace.id]
 
-  user_data = <<-EOF
-    #!/bin/bash
-    yum update -y
-    amazon-linux-extras install -y postgresql13
-    systemctl enable postgresql
-    systemctl start postgresql
-  EOF
+#   user_data = <<-EOF
+#     #!/bin/bash
+#     yum update -y
+#     amazon-linux-extras install -y postgresql13
+#     systemctl enable postgresql
+#     systemctl start postgresql
+#   EOF
 
-  tags = { Name = "postgres-db" }
+#   tags = { Name = "postgres-db" }
+# }
+
+resource "aws_db_instance" "postgres" {
+  identifier = "production-postgres"
+
+  engine         = "postgres"
+  engine_version = "14.19"
+  instance_class = "db.t3.micro"
+
+  allocated_storage = 20
+  storage_encrypted = false
+
+  db_name  = var.db_name
+  username = var.db_username
+  password = var.db_password
+
+  db_subnet_group_name   = aws_db_subnet_group.grace.name
+  vpc_security_group_ids = [aws_security_group.db.id]
+
+  backup_retention_period = 0
+  skip_final_snapshot    = true
+  publicly_accessible    = false
+  multi_az               = false
+
+  tags = {
+    Name = "PostgreSQL"
+  }
 }
+resource "aws_db_subnet_group" "grace" {
+  name       = "grace-db-subnet-group"
+  subnet_ids = aws_subnet.private[*].id
 
+  tags = {
+    Name = "grace-db-subnet-group"
+  }
+}

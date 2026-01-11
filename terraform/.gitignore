@@ -256,3 +256,12 @@ packer/*.log
 *.tfstate
 *.tfstate.backup
 .terraform/
+# Ignore Terraform plan files.
+*.tfplan    
+*.tfplan.json
+# Ignore Terraform lock file.
+.terraform.lock.hcl
+# Ignore backup files.
+*.backup    
+*.log
+# End of terraform/.gitignore

@@ -90,3 +90,18 @@ variable "ami_id" {
   description = "Optional explicit AMI ID to use"
   default     = ""
 }
+
+variable "key_name" {
+  description = "SSH key pair name"
+}
+
+variable "db_name" {
+  description = "Name of the database"
+}
+
+variable "db_username" {
+  description = "Username for the database"
+}
+variable "db_password" {
+  description = "Password for the database"
+}
