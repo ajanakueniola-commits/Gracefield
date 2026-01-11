@@ -46,22 +46,24 @@ resource "aws_subnet" "public" {
   tags = { Name = "grace-public-sub-${count.index}" }
 }
 
-resource "aws_subnet" "private" {
-  count             = 1
-  vpc_id            = aws_vpc.grace_vpc.id
-  cidr_block        = var.private_subnets[count.index]
-  availability_zone = var.azs[count.index]
-  tags = { Name = "grace-private-sub-${count.index}" }
-}
+# resource "aws_subnet" "grace_private" {
+#   count             = 1
+#   vpc_id            = aws_vpc.grace_vpc.id
+#   cidr_block        = var.private_subnet_cidrs[count.index]
+#   availability_zone = var.azs[count.index]
+
+#   tags = {
+#     Name = "grace-private-sub-${count.index}"
+#   }
+# }
 
 resource "aws_subnet" "grace_private" {
-  count             = 1
-  vpc_id            = aws_vpc.grace_vpc.id
-  cidr_block        = var.private_subnet_cidrs[count.index]
-  availability_zone = var.azs[count.index]
-
+  count             = 2
+  vpc_id            = aws_vpc.grace.id
+  cidr_block        = count.index == 0 ? "10.0.3.0/24" : "10.0.4.0/24"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   tags = {
-    Name = "grace-private-sub-${count.index}"
+    Name = "grace-private-${count.index + 1}"
   }
 }
 
@@ -249,12 +251,16 @@ resource "aws_db_instance" "postgres" {
 }
 resource "aws_db_subnet_group" "grace" {
   name       = "grace-db-subnet-group"
-  subnet_ids = aws_subnet.grace_private[*].id
+  subnet_ids = [
+    aws_subnet.grace_private[0].id,
+    aws_subnet.grace_private[1].id
+  ]
 
   tags = {
     Name = "grace-db-subnet-group"
   }
 }
+
 
 resource "aws_security_group" "db" {
   vpc_id = aws_vpc.grace_vpc.id
