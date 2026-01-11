@@ -18,10 +18,16 @@ data "aws_ami" "packer_or_amazon" {
 ####################
 # VPC
 ####################
-resource "aws_vpc" "grace" {
-  cidr_block = var.vpc_cidr
-  tags       = { Name = "grace-vpc" }
+resource "aws_vpc" "grace_vpc" {
+  cidr_block           = var.cidr_block
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "grace-vpc"
+  }
 }
+
 
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.grace.id
@@ -50,7 +56,7 @@ resource "aws_subnet" "private" {
 
 resource "aws_subnet" "grace_private" {
   count             = 1
-  vpc_id            = aws_vpc.grace-vpc.id
+  vpc_id            = aws_vpc.grace.id
   cidr_block        = var.private_subnet_cidrs[count.index]
   availability_zone = var.azs[count.index]
 
