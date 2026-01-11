@@ -19,9 +19,10 @@ output "postgres_endpoint" {
 }
 
 output "vpc_id" {
-  description = "VPC ID"
-  value       = aws_vpc.grace.id
+  description = "ID of the Grace VPC"
+  value       = aws_vpc.grace_vpc.id
 }
+
 output "public_subnet_ids" {
   description = "IDs of public subnets"
   value       = aws_subnet.public[*].id
