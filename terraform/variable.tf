@@ -125,3 +125,13 @@ variable "private_subnet_cidrs" {
     "10.0.4.0/24"
   ]
 }
+
+variable "private_db_subnet_ids" {
+  description = "List of private subnet IDs for the RDS DB subnet group"
+  type        = list(string)
+}
+variable "vpc_cidr" {
+  description = "CIDR block of the VPC"
+  type        = string
+}
+
