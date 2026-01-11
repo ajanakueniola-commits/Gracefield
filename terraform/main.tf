@@ -30,7 +30,7 @@ resource "aws_vpc" "grace_vpc" {
 
 
 resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.grace.id
+  vpc_id = aws_vpc.grace_vpc.id
   tags   = { Name = "grace-IGW" }
 }
 
@@ -39,7 +39,7 @@ resource "aws_internet_gateway" "igw" {
 ####################
 resource "aws_subnet" "public" {
   count                   = 1
-  vpc_id                  = aws_vpc.grace.id
+  vpc_id                  = aws_vpc.grace_vpc.id
   cidr_block              = var.public_subnets[count.index]
   availability_zone       = var.azs[count.index]
   map_public_ip_on_launch = true
@@ -48,7 +48,7 @@ resource "aws_subnet" "public" {
 
 resource "aws_subnet" "private" {
   count             = 1
-  vpc_id            = aws_vpc.grace.id
+  vpc_id            = aws_vpc.grace_vpc.id
   cidr_block        = var.private_subnets[count.index]
   availability_zone = var.azs[count.index]
   tags = { Name = "grace-private-sub-${count.index}" }
@@ -56,7 +56,7 @@ resource "aws_subnet" "private" {
 
 resource "aws_subnet" "grace_private" {
   count             = 1
-  vpc_id            = aws_vpc.grace.id
+  vpc_id            = aws_vpc.grace_vpc.id
   cidr_block        = var.private_subnet_cidrs[count.index]
   availability_zone = var.azs[count.index]
 
@@ -70,7 +70,7 @@ resource "aws_subnet" "grace_private" {
 # Route Table
 ####################
 resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.grace.id
+  vpc_id = aws_vpc.grace_vpc.id
 
   route {
     cidr_block = "0.0.0.0/0"
@@ -88,7 +88,7 @@ resource "aws_route_table_association" "public_assoc" {
 # Security Groups
 ####################
 resource "aws_security_group" "grace" {
-  vpc_id = aws_vpc.grace.id
+  vpc_id = aws_vpc.grace_vpc.id
   name   = "grace-sg"
 
   # SSH
@@ -255,7 +255,6 @@ resource "aws_db_subnet_group" "grace" {
     Name = "grace-db-subnet-group"
   }
 }
-
 
 resource "aws_security_group" "db" {
   vpc_id = aws_vpc.grace_vpc.id
