@@ -241,12 +241,13 @@ resource "aws_db_instance" "postgres" {
 }
 resource "aws_db_subnet_group" "grace" {
   name       = "grace-db-subnet-group"
-  subnet_ids = aws_db_subnet.private[*].id
+  subnet_ids = aws_subnet.grace_private[*].id
 
   tags = {
     Name = "grace-db-subnet-group"
   }
 }
+
 
 resource "aws_security_group" "db" {
   vpc_id = aws_vpc.grace.id
