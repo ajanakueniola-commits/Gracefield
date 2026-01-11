@@ -13,9 +13,9 @@ output "app_private_ips" {
 #   value       = aws_instance.jenkins.public_ip
 # }
 
-output "postgres_private_ip" {
-  description = "Private IP of PostgreSQL server"
-  value       = aws_instance.postgres.private_ip
+output "postgres_endpoint" {
+  description = "PostgreSQL RDS connection endpoint"
+  value       = aws_db_instance.postgres.endpoint
 }
 
 output "vpc_id" {
