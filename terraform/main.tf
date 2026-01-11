@@ -48,6 +48,18 @@ resource "aws_subnet" "private" {
   tags = { Name = "grace-private-sub-${count.index}" }
 }
 
+resource "aws_subnet" "grace_private" {
+  count             = 1
+  vpc_id            = aws_vpc.grace-vpc.id
+  cidr_block        = var.private_subnet_cidrs[count.index]
+  availability_zone = var.azs[count.index]
+
+  tags = {
+    Name = "grace-private-sub-${count.index}"
+  }
+}
+
+
 ####################
 # Route Table
 ####################
@@ -229,7 +241,7 @@ resource "aws_db_instance" "postgres" {
 }
 resource "aws_db_subnet_group" "grace" {
   name       = "grace-db-subnet-group"
-  subnet_ids = aws_subnet.private[*].id
+  subnet_ids = aws_db_subnet.private[*].id
 
   tags = {
     Name = "grace-db-subnet-group"
