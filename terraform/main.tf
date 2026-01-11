@@ -235,3 +235,24 @@ resource "aws_db_subnet_group" "grace" {
     Name = "grace-db-subnet-group"
   }
 }
+
+resource "aws_security_group" "db" {
+  vpc_id = aws_vpc.grace.id
+  name   = "grace-db-sg"
+
+  # PostgreSQL access from within VPC
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+
+  }
+}
