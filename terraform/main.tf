@@ -220,7 +220,7 @@ resource "aws_instance" "app" {
 # }
 
 resource "aws_db_instance" "postgres" {
-  identifier = "production-postgres"
+  identifier = "grace-postgres"
 
   engine         = "postgres"
   engine_version = "14.19"
@@ -229,7 +229,7 @@ resource "aws_db_instance" "postgres" {
   allocated_storage = 20
   storage_encrypted = false
 
-  db_name  = var.db_name
+  db_name  = "gracedb"
   username = var.db_username
   password = var.db_password
 
@@ -240,9 +240,11 @@ resource "aws_db_instance" "postgres" {
   skip_final_snapshot    = true
   publicly_accessible    = false
   multi_az               = false
+  # db_subnet_group_name    = aws_db_subnet_group.grace.name
+  # vpc_security_group_ids  = [aws_security_group.db.id]
 
   tags = {
-    Name = "PostgreSQL"
+    Name = "gracepostgres"
   }
 }
 resource "aws_db_subnet_group" "grace" {
@@ -256,7 +258,7 @@ resource "aws_db_subnet_group" "grace" {
 
 
 resource "aws_security_group" "db" {
-  vpc_id = aws_vpc.grace.id
+  vpc_id = aws_vpc.grace_vpc.id
   name   = "grace-db-sg"
 
   # PostgreSQL access from within VPC
