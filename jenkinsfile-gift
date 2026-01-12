@@ -100,7 +100,8 @@ pipeline {
     stage('Deploy Nginx + Reverse Proxy') {
       when { expression { params.ACTION == 'apply' } }
       steps {
-        sshagent(credentials: ['AWS_SSH_KEY']) {
+        script {
+          sshagent(credentials: ['AWS_SSH_KEY']) {
           sh """
           for ip in \$(echo '${env.WEB_IPS}' | jq -r '.[]'); do
             echo "Configuring Nginx on \$ip"
@@ -144,7 +145,7 @@ EOF
         }
       }
     }
-
+    }
     stage('Terraform Destroy') {
       when { expression { params.ACTION == 'destroy' } }
       steps {
