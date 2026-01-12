@@ -32,10 +32,10 @@ output "vpc_cidr_used" {
 output "private_subnet_cidrs_used" {
   value = var.private_subnet_cidrs
 }
-output "backend_public_ips" {
-  description = "Public IPs of backend app servers (empty if in private subnet)"
-  value       = aws_instance.app[*].public_ip
-}
+# output "backend_public_ips" {
+#   description = "Public IPs of backend app servers (empty if in private subnet)"
+#   value       = aws_instance.app[*].public_ip
+# }
 
 output "public_subnet_ids" {
   description = "List of public subnet IDs"
@@ -46,10 +46,10 @@ output "public_subnet_ids" {
 # Nginx / Web Servers
 ##########################
 
-output "web_server_ips" {
-  description = "Public IPs of Nginx web servers"
-  value       = aws_instance.nginx[*].public_ip
-}
+# output "web_server_ips" {
+#   description = "Public IPs of Nginx web servers"
+#   value       = aws_instance.nginx[*].public_ip
+# }
 
 ##########################
 # Backend / App Servers
@@ -64,10 +64,10 @@ output "backend_private_ips" {
 # PostgreSQL
 ##########################
 
-output "postgres_endpoint" {
-  description = "RDS Postgres endpoint"
-  value       = aws_db_instance.postgres.endpoint
-}
+# output "postgres_endpoint" {
+#   description = "RDS Postgres endpoint"
+#   value       = aws_db_instance.postgres.endpoint
+# }
 
 # # Output PostgreSQL endpoint
 # output "postgres_endpoint" {
