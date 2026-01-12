@@ -40,3 +40,53 @@ output "web_server_ips" {
   description = "Public IPs of Nginx web servers"
   value       = aws_instance.nginx[*].public_ip
 }
+##########################
+# VPC & Subnets
+##########################
+
+output "vpc_id" {
+  description = "VPC ID"
+  value       = aws_vpc.grace_vpc.id
+}
+
+output "public_subnet_ids" {
+  description = "List of public subnet IDs"
+  value       = aws_subnet.public[*].id
+}
+
+output "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  value       = aws_subnet.grace_private[*].id
+}
+
+##########################
+# Nginx / Web Servers
+##########################
+
+output "web_server_ips" {
+  description = "Public IPs of Nginx web servers"
+  value       = aws_instance.nginx[*].public_ip
+}
+
+##########################
+# Backend / App Servers
+##########################
+
+output "backend_private_ips" {
+  description = "Private IPs of app servers"
+  value       = aws_instance.app[*].private_ip
+}
+
+##########################
+# PostgreSQL
+##########################
+
+output "postgres_endpoint" {
+  description = "RDS Postgres endpoint"
+  value       = aws_db_instance.postgres.endpoint
+}
+
+output "db_subnet_group" {
+  description = "RDS DB Subnet Group Name"
+  value       = aws_db_subnet_group.grace.name
+}
