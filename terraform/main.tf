@@ -40,7 +40,7 @@ resource "aws_internet_gateway" "igw" {
 ####################
 # Subnets
 ####################
-resource "aws_subnet" "public" {
+resource "aws_subnet" "grace_public" {
   count                   = 2
   vpc_id                  = aws_vpc.grace_vpc.id
   cidr_block              = ["10.0.1.0/24", "10.0.2.0/24"][count.index]
@@ -79,7 +79,7 @@ resource "aws_route_table" "public" {
 
 resource "aws_route_table_association" "public" {
   count          = 2
-  subnet_id      = aws_subnet.public[count.index].id
+  subnet_id      = aws_subnet.grace_public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 resource "aws_route_table" "private" {
@@ -123,7 +123,7 @@ resource "aws_instance" "nginx" {
   count                       = 1
   ami                         = var.ami_id != "" ? var.ami_id : data.aws_ami.packer_or_amazon.id
   instance_type               = var.instance_type
-  subnet_id                   = aws_subnet.public[count.index].id
+  subnet_id                   = aws_subnet.grace_public[count.index].id
   vpc_security_group_ids      = [aws_security_group.grace.id]
   associate_public_ip_address = true
 
@@ -146,7 +146,7 @@ resource "aws_instance" "app" {
   count                  = 1
   ami                    = var.ami_id != "" ? var.ami_id : data.aws_ami.packer_or_amazon.id
   instance_type          = var.instance_type
-  subnet_id              = aws_subnet.private[count.index].id
+  subnet_id              = aws_subnet.grace_private[count.index].id
   vpc_security_group_ids = [aws_security_group.grace.id]
 
   user_data = <<-EOF

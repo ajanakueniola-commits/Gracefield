@@ -24,13 +24,21 @@ output "vpc_id" {
 }
 
 output "public_subnet_ids" {
-  description = "IDs of public subnets"
-  value       = aws_subnet.public[*].id
+  value = aws_subnet.public[*].id
 }
-# output "private_subnet_ids" {
-#   description = "IDs of private subnets"
-#   value       = aws_subnet.private[*].id
-# }
+
+output "private_subnet_ids" {
+  value = aws_subnet.grace_private[*].id
+}
+
+output "vpc_id" {
+  value = aws_vpc.grace_vpc.id
+}
+
+output "db_subnet_group" {
+  value = aws_db_subnet_group.grace.name
+}
+
 output "security_group_id" {
   description = "Security Group ID"
   value       = aws_security_group.grace.id
