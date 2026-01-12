@@ -85,8 +85,16 @@ resource "aws_route_table_association" "public" {
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.grace_vpc.id
 
-  # No 0.0.0.0/0 route here
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.grace.id
+  }
+
+  tags = {
+    Name = "grace-private-rt"
+  }
 }
+
 resource "aws_route_table_association" "private" {
   count          = 2
   subnet_id      = aws_subnet.grace_private[count.index].id
@@ -114,6 +122,23 @@ resource "aws_security_group" "grace" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+resource "aws_eip" "nat" {
+  domain = "vpc"
+  tags = {
+    Name = "grace-nat-eip"
+  }
+}
+resource "aws_nat_gateway" "grace" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id
+
+  tags = {
+    Name = "grace-nat"
+  }
+
+  depends_on = [aws_internet_gateway.igw]
 }
 
 ####################
