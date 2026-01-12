@@ -194,11 +194,18 @@ resource "aws_instance" "app" {
 # PostgreSQL Instance (Private)
 ####################
 resource "aws_db_subnet_group" "grace" {
+  name = "grace-db-subnet-group"
+
   subnet_ids = [
-    aws_subnet.private_1.id,
-    aws_subnet.private_2.id
+    aws_subnet.grace_private[0].id,
+    aws_subnet.grace_private[1].id
   ]
+
+  tags = {
+    Name = "grace-db-subnet-group"
+  }
 }
+
 resource "aws_db_instance" "postgres" {
   identifier = "grace-postgres"
 
