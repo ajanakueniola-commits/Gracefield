@@ -88,7 +88,7 @@ pipeline {
     returnStdout: true
 ).trim()
 
-     echo "Postgres Endpoint: ${env.POSTGRES_ENDPOINT}"
+     // echo "Postgres Endpoint: ${env.POSTGRES_ENDPOINT}"
      echo "Backend IP: ${env.BACKEND_IP}"
      echo "Web IPs: ${env.WEB_IPS}"
       }
