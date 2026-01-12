@@ -68,8 +68,3 @@ output "postgres_endpoint" {
   description = "RDS Postgres endpoint"
   value       = aws_db_instance.postgres.endpoint
 }
-
-output "db_subnet_group" {
-  description = "RDS DB Subnet Group Name"
-  value       = aws_db_subnet_group.grace.name
-}
