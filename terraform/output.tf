@@ -23,6 +23,7 @@ output "instance_type_used" {
 output "region_used" {
   value = var.region
 }
+
 output "availability_zones_used" {
   value = var.azs
 }
@@ -50,6 +51,7 @@ output "web_server_ips" {
   description = "Public IPs of Nginx web servers"
   value       = aws_instance.nginx[*].public_ip
 }
+
 
 ##########################
 # PostgreSQL
