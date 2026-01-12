@@ -36,27 +36,10 @@ output "backend_public_ips" {
   description = "Public IPs of backend app servers (empty if in private subnet)"
   value       = aws_instance.app[*].public_ip
 }
-output "web_server_ips" {
-  description = "Public IPs of Nginx web servers"
-  value       = aws_instance.nginx[*].public_ip
-}
-##########################
-# VPC & Subnets
-##########################
-
-output "vpc_id" {
-  description = "VPC ID"
-  value       = aws_vpc.grace_vpc.id
-}
 
 output "public_subnet_ids" {
   description = "List of public subnet IDs"
   value       = aws_subnet.public[*].id
-}
-
-output "private_subnet_ids" {
-  description = "List of private subnet IDs"
-  value       = aws_subnet.grace_private[*].id
 }
 
 ##########################
