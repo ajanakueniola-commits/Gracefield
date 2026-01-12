@@ -19,7 +19,7 @@ data "aws_ami" "packer_or_amazon" {
 # VPC
 ####################
 resource "aws_vpc" "grace_vpc" {
-  cidr_block           = var.cidr_block
+  cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
 
@@ -28,45 +28,42 @@ resource "aws_vpc" "grace_vpc" {
   }
 }
 
-
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.grace_vpc.id
-  tags   = { Name = "grace-IGW" }
+
+  tags = {
+    Name = "grace-igw"
+  }
 }
+
 
 ####################
 # Subnets
 ####################
 resource "aws_subnet" "public" {
-  count                   = 1
+  count                   = 2
   vpc_id                  = aws_vpc.grace_vpc.id
-  cidr_block              = var.public_subnets[count.index]
-  availability_zone       = var.azs[count.index]
+  cidr_block              = ["10.0.1.0/24", "10.0.2.0/24"][count.index]
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
   map_public_ip_on_launch = true
-  tags = { Name = "grace-public-sub-${count.index}" }
-}
 
-# resource "aws_subnet" "grace_private" {
-#   count             = 1
-#   vpc_id            = aws_vpc.grace_vpc.id
-#   cidr_block        = var.private_subnet_cidrs[count.index]
-#   availability_zone = var.azs[count.index]
-
-#   tags = {
-#     Name = "grace-private-sub-${count.index}"
-#   }
-# }
-
-resource "aws_subnet" "grace_private" {
-  count             = 2
-  vpc_id            = aws_vpc.grace.id
-  cidr_block        = count.index == 0 ? "10.0.3.0/24" : "10.0.4.0/24"
-  availability_zone = data.aws_availability_zones.available.names[count.index]
   tags = {
-    Name = "grace-private-${count.index + 1}"
+    Name = "grace-public-sub-${count.index + 1}"
   }
 }
 
+data "aws_availability_zones" "available" {}
+
+resource "aws_subnet" "grace_private" {
+  count             = 2
+  vpc_id            = aws_vpc.grace_vpc.id
+  cidr_block        = var.private_subnet_cidrs[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = {
+    Name = "grace-private-sub-${count.index + 1}"
+  }
+}
 
 ####################
 # Route Table
@@ -80,12 +77,21 @@ resource "aws_route_table" "public" {
   }
 }
 
-resource "aws_route_table_association" "public_assoc" {
-  count          = 1
+resource "aws_route_table_association" "public" {
+  count          = 2
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.grace_vpc.id
 
+  # No 0.0.0.0/0 route here
+}
+resource "aws_route_table_association" "private" {
+  count          = 2
+  subnet_id      = aws_subnet.grace_private[count.index].id
+  route_table_id = aws_route_table.private.id
+}
 ####################
 # Security Groups
 ####################
@@ -108,23 +114,6 @@ resource "aws_security_group" "grace" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  # PostgreSQL (private access only)
-  ingress {
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = { Name = "grace-sg" }
 }
 
 ####################
@@ -204,23 +193,12 @@ resource "aws_instance" "app" {
 ####################
 # PostgreSQL Instance (Private)
 ####################
-# resource "aws_instance" "postgres" {
-#   ami                    = var.ami_id != "" ? var.ami_id : data.aws_ami.packer_or_amazon.id
-#   instance_type          = var.instance_type
-#   subnet_id              = aws_subnet.private[0].id
-#   vpc_security_group_ids = [aws_security_group.grace.id]
-
-#   user_data = <<-EOF
-#     #!/bin/bash
-#     yum update -y
-#     amazon-linux-extras install -y postgresql13
-#     systemctl enable postgresql
-#     systemctl start postgresql
-#   EOF
-
-#   tags = { Name = "postgres-db" }
-# }
-
+resource "aws_db_subnet_group" "grace" {
+  subnet_ids = [
+    aws_subnet.private_1.id,
+    aws_subnet.private_2.id
+  ]
+}
 resource "aws_db_instance" "postgres" {
   identifier = "grace-postgres"
 
@@ -249,18 +227,6 @@ resource "aws_db_instance" "postgres" {
     Name = "gracepostgres"
   }
 }
-resource "aws_db_subnet_group" "grace" {
-  name       = "grace-db-subnet-group"
-  subnet_ids = [
-    aws_subnet.grace_private[0].id,
-    aws_subnet.grace_private[1].id
-  ]
-
-  tags = {
-    Name = "grace-db-subnet-group"
-  }
-}
-
 
 resource "aws_security_group" "db" {
   vpc_id = aws_vpc.grace_vpc.id
