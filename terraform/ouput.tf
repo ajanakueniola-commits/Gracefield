@@ -13,23 +13,24 @@ output "app_private_ips" {
 #   value       = aws_instance.jenkins.public_ip
 # }
 
-output "postgres_private_ip" {
-  description = "Private IP of PostgreSQL server"
-  value       = aws_instance.postgres.private_ip
+output "postgres_endpoint" {
+  description = "PostgreSQL RDS connection endpoint"
+  value       = aws_db_instance.postgres.endpoint
 }
 
 output "vpc_id" {
-  description = "VPC ID"
-  value       = aws_vpc.grace.id
+  description = "ID of the Grace VPC"
+  value       = aws_vpc.grace_vpc.id
 }
+
 output "public_subnet_ids" {
   description = "IDs of public subnets"
   value       = aws_subnet.public[*].id
 }
-output "private_subnet_ids" {
-  description = "IDs of private subnets"
-  value       = aws_subnet.private[*].id
-}
+# output "private_subnet_ids" {
+#   description = "IDs of private subnets"
+#   value       = aws_subnet.private[*].id
+# }
 output "security_group_id" {
   description = "Security Group ID"
   value       = aws_security_group.grace.id

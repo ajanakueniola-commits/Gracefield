@@ -53,16 +53,21 @@ variable "vpc_cidr" {
   default     = "10.0.0.0/16"
 }
 
-variable "public_subnets" {
-  description = "List of public subnet CIDRs"
-  type        = list(string)
-  default     = ["10.0.1.0/24", "10.0.2.0/24"]
+variable "private_subnet_cidrs" {
+  type = list(string)
+  default = [
+    "10.0.3.0/24",
+    "10.0.4.0/24"
+  ]
 }
 
-variable "private_subnets" {
-  description = "List of private subnet CIDRs"
-  type        = list(string)
-  default     = ["10.0.3.0/24", "10.0.4.0/24"]
+
+variable "private_subnet_cidrs" {
+  type = list(string)
+  default = [
+    "10.0.3.0/24",
+    "10.0.4.0/24"
+  ]
 }
 
 variable "azs" {
@@ -104,4 +109,24 @@ variable "db_username" {
 }
 variable "db_password" {
   description = "Password for the database"
+}
+
+variable "cidr_block" {
+  description = "CIDR block for the VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+variable "db_allocated_storage" {
+  description = "Allocated storage for the database in GB"
+  type        = number
+  default     = 20
+}
+variable "private_subnet_cidrs" {
+  description = "CIDR blocks for private subnets used by RDS and backend servers"
+  type        = list(string)
+
+  default = [
+    "10.0.5.0/24",
+    "10.0.6.0/24"
+  ]
 }
