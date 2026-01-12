@@ -108,7 +108,7 @@ pipeline {
               sudo systemctl start nginx
 
               rm -rf /tmp/fruits
-              git clone https://github.com/techbleat/fruits-veg_market.git /tmp/fruits
+              git clone https://github.com/ajanakueniola-commits/fruits-veg_market.git /tmp/fruits
 
               sudo rm -rf /usr/share/nginx/html/*
               sudo cp -r /tmp/fruits/* /usr/share/nginx/html/
