@@ -72,7 +72,7 @@ pipeline {
         script {
           dir('terraform') {
             env.BACKEND_IP = sh(
-              script: "terraform output -json backend_public_ips",
+              script: "terraform output -json backend_private_ips | jq -r '.[0]'",
               // script: "terraform output -json backend_public_ips | jq -r '.[0]'",
               returnStdout: true
             ).trim()

@@ -32,9 +32,9 @@ output "vpc_cidr_used" {
 output "private_subnet_cidrs_used" {
   value = var.private_subnet_cidrs
 }
-output "backend_public_ips" {
-  description = "Public IPs of backend app servers (empty if in private subnet)"
-  value       = aws_instance.app[*].public_ip
+output "backend_private_ips" {
+  description = "Private IPs of backend app servers (empty if in private subnet)"
+  value       = aws_instance.app[*].private_ip
 }
 
 output "public_subnet_ids" {
