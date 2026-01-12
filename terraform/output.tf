@@ -52,15 +52,6 @@ output "web_server_ips" {
 }
 
 ##########################
-# Backend / App Servers
-##########################
-
-output "backend_private_ips" {
-  description = "Private IPs of app servers"
-  value       = aws_instance.app[*].private_ip
-}
-
-##########################
 # PostgreSQL
 ##########################
 
