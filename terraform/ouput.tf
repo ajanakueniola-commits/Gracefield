@@ -69,29 +69,29 @@ output "postgres_endpoint" {
   value       = aws_db_instance.postgres.endpoint
 }
 
-# Output PostgreSQL endpoint
-output "postgres_endpoint" {
-  description = "RDS Postgres endpoint"
-  value       = aws_db_instance.postgres.endpoint
-}
+# # Output PostgreSQL endpoint
+# output "postgres_endpoint" {
+#   description = "RDS Postgres endpoint"
+#   value       = aws_db_instance.postgres.endpoint
+# }
 
-# Nginx / web server public IPs
-output "web_server_ips" {
-  description = "Public IPs of Nginx web servers"
-  value       = aws_instance.nginx[*].public_ip
-}
+# # Nginx / web server public IPs
+# output "web_server_ips" {
+#   description = "Public IPs of Nginx web servers"
+#   value       = aws_instance.nginx[*].public_ip
+# }
 
-# Backend / App server private IPs
-output "backend_private_ips" {
-  description = "Private IPs of app servers"
-  value       = aws_instance.app[*].private_ip
-}
+# # Backend / App server private IPs
+# output "backend_private_ips" {
+#   description = "Private IPs of app servers"
+#   value       = aws_instance.app[*].private_ip
+# }
 
-# Public / Private subnet IDs
-output "public_subnet_ids" {
-  value = aws_subnet.public[*].id
-}
+# # Public / Private subnet IDs
+# output "public_subnet_ids" {
+#   value = aws_subnet.public[*].id
+# }
 
-output "private_subnet_ids" {
-  value = aws_subnet.grace_private[*].id
-}
+# output "private_subnet_ids" {
+#   value = aws_subnet.grace_private[*].id
+# }
