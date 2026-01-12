@@ -36,3 +36,7 @@ output "backend_public_ips" {
   description = "Public IPs of backend app servers (empty if in private subnet)"
   value       = aws_instance.app[*].public_ip
 }
+output "web_server_ips" {
+  description = "Public IPs of Nginx web servers"
+  value       = aws_instance.nginx[*].public_ip
+}
