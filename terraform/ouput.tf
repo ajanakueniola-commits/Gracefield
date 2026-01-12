@@ -57,7 +57,7 @@ output "web_server_ips" {
 
 output "backend_private_ips" {
   description = "Private IPs of app servers"
-  value       = aws_instance.app[*].private_ip
+  value       = "10.0.3.68"
 }
 
 ##########################
@@ -66,5 +66,5 @@ output "backend_private_ips" {
 
 output "postgres_endpoint" {
   description = "RDS Postgres endpoint"
-  value       = aws_db_instance.postgres.endpoint
+  value       = "grace-postgres.cr2weke84vyw.us-east-2.rds.amazonaws.com"
 }
