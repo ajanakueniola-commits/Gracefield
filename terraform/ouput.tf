@@ -1,41 +1,70 @@
-output "nginx_public_ips" {
-  description = "Public IPs of NGINX instances"
-  value       = aws_instance.nginx[*].public_ip
-}
-
-output "app_private_ips" {
-  description = "Private IPs of App instances"
-  value       = aws_instance.app[*].private_ip
-}
-
-# output "jenkins_public_ip" {
-#   description = "Public IP of Jenkins"
-#   value       = aws_instance.jenkins.public_ip
-# }
-
-output "postgres_endpoint" {
-  description = "PostgreSQL RDS connection endpoint"
-  value       = aws_db_instance.postgres.endpoint
-}
-
 output "vpc_id" {
-  description = "ID of the Grace VPC"
-  value       = aws_vpc.grace_vpc.id
+  value = aws_vpc.grace_vpc.id
+}
+
+# output "public_subnet_ids" {
+#   value = aws_subnet.public[*].id
+# }
+output "private_subnet_ids" {
+  value = aws_subnet.grace_private[*].id
+}
+output "db_subnet_group" {
+  value = aws_db_subnet_group.grace.name
+}
+output "security_group_id" {
+  value = aws_security_group.grace.id
+}
+output "ami_used" {
+  value = var.ami_id != "" ? var.ami_id : data.aws_ami.packer_or_amazon.id
+}
+output "instance_type_used" {
+  value = var.instance_type
+}
+output "region_used" {
+  value = var.region
+}
+output "availability_zones_used" {
+  value = var.azs
+}
+output "vpc_cidr_used" {
+  value = var.vpc_cidr
+}
+output "private_subnet_cidrs_used" {
+  value = var.private_subnet_cidrs
+}
+output "backend_public_ips" {
+  description = "Public IPs of backend app servers (empty if in private subnet)"
+  value       = aws_instance.app[*].public_ip
 }
 
 output "public_subnet_ids" {
-  description = "IDs of public subnets"
+  description = "List of public subnet IDs"
   value       = aws_subnet.public[*].id
 }
-# output "private_subnet_ids" {
-#   description = "IDs of private subnets"
-#   value       = aws_subnet.private[*].id
-# }
-output "security_group_id" {
-  description = "Security Group ID"
-  value       = aws_security_group.grace.id
+
+##########################
+# Nginx / Web Servers
+##########################
+
+output "web_server_ips" {
+  description = "Public IPs of Nginx web servers"
+  value       = aws_instance.nginx[*].public_ip
 }
-output "ami_used" {
-  description = "AMI ID used for EC2 instances"
-  value       = var.ami_id != "" ? var.ami_id : data.aws_ami.packer_or_amazon.id
+
+##########################
+# Backend / App Servers
+##########################
+
+output "backend_private_ips" {
+  description = "Private IPs of app servers"
+  value       = "10.0.3.68"
+}
+
+##########################
+# PostgreSQL
+##########################
+
+output "postgres_endpoint" {
+  description = "RDS Postgres endpoint"
+  value       = "grace-postgres.cr2weke84vyw.us-east-2.rds.amazonaws.com"
 }

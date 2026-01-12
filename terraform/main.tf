@@ -146,7 +146,7 @@ resource "aws_instance" "app" {
   count                  = 1
   ami                    = var.ami_id != "" ? var.ami_id : data.aws_ami.packer_or_amazon.id
   instance_type          = var.instance_type
-  subnet_id              = aws_subnet.private[count.index].id
+  subnet_id              = aws_subnet.grace_private[count.index].id
   vpc_security_group_ids = [aws_security_group.grace.id]
 
   user_data = <<-EOF
@@ -194,11 +194,18 @@ resource "aws_instance" "app" {
 # PostgreSQL Instance (Private)
 ####################
 resource "aws_db_subnet_group" "grace" {
+  name = "grace-db-subnet-group"
+
   subnet_ids = [
-    aws_subnet.private_1.id,
-    aws_subnet.private_2.id
+    aws_subnet.grace_private[0].id,
+    aws_subnet.grace_private[1].id
   ]
+
+  tags = {
+    Name = "grace-db-subnet-group"
+  }
 }
+
 resource "aws_db_instance" "postgres" {
   identifier = "grace-postgres"
 
