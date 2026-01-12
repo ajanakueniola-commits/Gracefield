@@ -83,10 +83,10 @@ pipeline {
             ).trim()
           }
 
-          env.POSTGRES_ENDPOINT = sh(
-        script: 'terraform output -raw postgres_endpoint',
-    returnStdout: true
-).trim()
+//           env.POSTGRES_ENDPOINT = sh(
+//         script: 'terraform output -raw postgres_endpoint',
+//     returnStdout: true
+// ).trim()
 
      // echo "Postgres Endpoint: ${env.POSTGRES_ENDPOINT}"
      echo "Backend IP: ${env.BACKEND_IP}"

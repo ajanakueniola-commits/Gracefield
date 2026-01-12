@@ -55,10 +55,10 @@ output "web_server_ips" {
 # PostgreSQL
 ##########################
 
-output "postgres_endpoint" {
-  description = "RDS Postgres endpoint"
-  value       = aws_db_instance.postgres.endpoint
-}
+# output "postgres_endpoint" {
+#   description = "RDS Postgres endpoint"
+#   value       = aws_db_instance.postgres.endpoint
+# }
 
 # # Output PostgreSQL endpoint
 # output "postgres_endpoint" {
