@@ -36,6 +36,3 @@ output "backend_public_ips" {
   description = "Public IPs of backend app servers (empty if in private subnet)"
   value       = aws_instance.app[*].public_ip
 }
-output "db_endpoint" {
-  value = aws_db_instance.grace_db.endpoint
-}
