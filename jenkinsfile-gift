@@ -5,6 +5,8 @@ pipeline {
     AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
     AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
     AWS_REGION           = 'us-east-2'
+    AWS_SSH_KEY = credentials('AWS_SSH_KEY')
+
   }
 
   parameters {
@@ -132,7 +134,7 @@ server {
         proxy_set_header X-Real-IP \\$remote_addr;
     }
 }
-EOL
+EOF
 
               sudo nginx -t
               sudo systemctl restart nginx
