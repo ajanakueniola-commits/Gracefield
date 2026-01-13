@@ -112,7 +112,6 @@ pipeline {
               cd fruits-veg_market/frontend
              
               sed -i 's|http://localhost|https://${env.BACKEND_IP}|g' index.html
-              sudo rm -rf /usr/share/nginx/html/*
               sudo cp index.html /usr/share/nginx/html/
 
               sudo tee /etc/nginx/nginx.conf> /dev/null << EOL
