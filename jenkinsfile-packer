@@ -1,51 +1,51 @@
-pipeline {
-    agent any 
+// pipeline {
+//     agent any 
 
-    environment {
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
-        AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
-        AWS_DEFAULT_REGION    = 'us-east-2'
-    }
+//     environment {
+//         AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
+//         AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
+//         AWS_DEFAULT_REGION    = 'us-east-2'
+//     }
 
-    stages {
+//     stages {
 
-        stage('checkout') {
-            steps {
-                checkout scm
-            }
-        }
+//         stage('checkout') {
+//             steps {
+//                 checkout scm
+//             }
+//         }
 
-        stage('packer init') {
-            steps {
-                dir('packer') {
-                    sh 'packer init nginx-app-base.pkr.hcl'
-                }
-            }
-        }
+//         stage('packer init') {
+//             steps {
+//                 dir('packer') {
+//                     sh 'packer init nginx-app-base.pkr.hcl'
+//                 }
+//             }
+//         }
 
-        stage('packer validate .') {
-            steps {
-                dir('packer') {
-                    sh 'packer validate .'
-                }
-            }
-        }
+//         stage('packer validate .') {
+//             steps {
+//                 dir('packer') {
+//                     sh 'packer validate .'
+//                 }
+//             }
+//         }
 
-        stage('Packer Build') {
-            steps {
-                dir('packer') {
-                    sh 'packer build .'
+//         stage('Packer Build') {
+//             steps {
+//                 dir('packer') {
+//                     sh 'packer build .'
 
-                    script {
-                        def AMI_ID = sh(
-                            script: "jq -r '.builds[0].artifact_id | split(\":\")[1]' manifest.json",
-                            returnStdout: true
-                        ).trim()
+//                     script {
+//                         def AMI_ID = sh(
+//                             script: "jq -r '.builds[0].artifact_id | split(\":\")[1]' manifest.json",
+//                             returnStdout: true
+//                         ).trim()
 
-                        echo "Created AMI ID: ${AMI_ID}"
-                    }
-                }
-            }
-        }
-    }
-}
+//                         echo "Created AMI ID: ${AMI_ID}"
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }

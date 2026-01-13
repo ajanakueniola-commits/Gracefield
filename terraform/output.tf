@@ -23,6 +23,7 @@ output "instance_type_used" {
 output "region_used" {
   value = var.region
 }
+
 output "availability_zones_used" {
   value = var.azs
 }
@@ -32,9 +33,9 @@ output "vpc_cidr_used" {
 output "private_subnet_cidrs_used" {
   value = var.private_subnet_cidrs
 }
-output "backend_public_ips" {
-  description = "Public IPs of backend app servers (empty if in private subnet)"
-  value       = aws_instance.app[*].public_ip
+output "backend_private_ips" {
+  description = "Private IPs of backend app servers (empty if in private subnet)"
+  value       = aws_instance.app[*].private_ip
 }
 
 output "public_subnet_ids" {
@@ -51,20 +52,39 @@ output "web_server_ips" {
   value       = aws_instance.nginx[*].public_ip
 }
 
-##########################
-# Backend / App Servers
-##########################
-
-output "backend_private_ips" {
-  description = "Private IPs of app servers"
-  value       = "10.0.3.68"
-}
 
 ##########################
 # PostgreSQL
 ##########################
 
-output "postgres_endpoint" {
-  description = "RDS Postgres endpoint"
-  value       = "grace-postgres.cr2weke84vyw.us-east-2.rds.amazonaws.com"
-}
+# output "postgres_endpoint" {
+#   description = "RDS Postgres endpoint"
+#   value       = aws_db_instance.postgres.endpoint
+# }
+
+# # Output PostgreSQL endpoint
+# output "postgres_endpoint" {
+#   description = "RDS Postgres endpoint"
+#   value       = aws_db_instance.postgres.endpoint
+# }
+
+# # Nginx / web server public IPs
+# output "web_server_ips" {
+#   description = "Public IPs of Nginx web servers"
+#   value       = aws_instance.nginx[*].public_ip
+# }
+
+# # Backend / App server private IPs
+# output "backend_private_ips" {
+#   description = "Private IPs of app servers"
+#   value       = aws_instance.app[*].private_ip
+# }
+
+# # Public / Private subnet IDs
+# output "public_subnet_ids" {
+#   value = aws_subnet.public[*].id
+# }
+
+# output "private_subnet_ids" {
+#   value = aws_subnet.grace_private[*].id
+# }

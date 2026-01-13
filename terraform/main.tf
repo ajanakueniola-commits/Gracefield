@@ -68,30 +68,8 @@ resource "aws_subnet" "grace_private" {
 ####################
 # Route Table
 ####################
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.grace_vpc.id
 
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id
-  }
-}
 
-resource "aws_route_table_association" "public" {
-  count          = 2
-  subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public.id
-}
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.grace_vpc.id
-
-  # No 0.0.0.0/0 route here
-}
-resource "aws_route_table_association" "private" {
-  count          = 2
-  subnet_id      = aws_subnet.grace_private[count.index].id
-  route_table_id = aws_route_table.private.id
-}
 ####################
 # Security Groups
 ####################
@@ -114,6 +92,73 @@ resource "aws_security_group" "grace" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  egress {
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+}
+
+}
+#####################
+# NAT Gateway Setup
+#####################
+resource "aws_eip" "nat" {
+  domain = "vpc"
+}
+
+resource "aws_nat_gateway" "grace" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id
+
+  depends_on = [aws_internet_gateway.igw]
+  tags = {
+    Name = "grace-nat"
+  }
+}
+
+#####################
+# Public Route Table
+#####################
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.grace_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+
+  tags = {
+    Name = "grace-public-rt"
+  }
+}
+
+resource "aws_route_table_association" "public" {
+  count          = 2
+  subnet_id      = aws_subnet.public[count.index].id
+  route_table_id = aws_route_table.public.id
+}
+
+#####################
+# Private Route Table
+#####################
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.grace_vpc.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.grace.id
+  }
+
+  tags = {
+    Name = "grace-private-rt"
+  }
+}
+
+resource "aws_route_table_association" "private" {
+  count          = 2
+  subnet_id      = aws_subnet.grace_private[count.index].id
+  route_table_id = aws_route_table.private.id
 }
 
 ####################
@@ -126,15 +171,32 @@ resource "aws_instance" "nginx" {
   subnet_id                   = aws_subnet.public[count.index].id
   vpc_security_group_ids      = [aws_security_group.grace.id]
   associate_public_ip_address = true
-
+  key_name                    = var.key_name
+  
   user_data = <<-EOF
-    #!/bin/bash
-    yum update -y
-    amazon-linux-extras install -y nginx1
-    systemctl enable nginx
-    systemctl start nginx
-    echo "Hello from nginx instance ${count.index}" > /usr/share/nginx/html/index.html
-  EOF
+                #!/bin/bash
+               
+                echo "Starting Nginx installation..."
+                
+                # Update system
+                sudo yum update -y
+                
+                # Install Nginx
+                sudo amazon-linux-extras install nginx1 -y
+                
+                # Create custom landing page
+  
+                
+                # Start Nginx
+                sudo systemctl enable nginx
+                sudo systemctl start nginx
+                
+                # Check if Nginx is running
+                sudo systemctl status nginx
+                
+                echo "Nginx installation completed!"
+EOF
+
 
   tags = { Name = "nginx-${count.index}" }
 }
@@ -148,7 +210,7 @@ resource "aws_instance" "app" {
   instance_type          = var.instance_type
   subnet_id              = aws_subnet.grace_private[count.index].id
   vpc_security_group_ids = [aws_security_group.grace.id]
-
+  key_name               = var.key_name
   user_data = <<-EOF
     #!/bin/bash
     yum update -y
@@ -240,12 +302,19 @@ resource "aws_security_group" "db" {
   name   = "grace-db-sg"
 
   # PostgreSQL access from within VPC
-  ingress {
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr]
-  }
+  # ingress {
+  #   from_port   = 5432
+  #   to_port     = 5432
+  #   protocol    = "tcp"
+  #   cidr_blocks = [var.vpc_cidr]
+  # }
+
+ingress {
+  from_port       = 5432
+  to_port         = 5432
+  protocol        = "tcp"
+  security_groups = [aws_security_group.grace.id]
+}
 
   egress {
     from_port   = 0

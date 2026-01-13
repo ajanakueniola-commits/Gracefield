@@ -5,6 +5,8 @@ pipeline {
     AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
     AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
     AWS_REGION           = 'us-east-2'
+    AWS_SSH_KEY = credentials('AWS_SSH_KEY')
+
   }
 
   parameters {
@@ -72,7 +74,8 @@ pipeline {
         script {
           dir('terraform') {
             env.BACKEND_IP = sh(
-              script: "terraform output -json backend_public_ips | jq -r '.[0]'",
+              script: "terraform output -json backend_private_ips | jq -r '.[0]'",
+              // script: "terraform output -json backend_public_ips | jq -r '.[0]'",
               returnStdout: true
             ).trim()
 
@@ -82,12 +85,12 @@ pipeline {
             ).trim()
           }
 
-          env.POSTGRES_ENDPOINT = sh(
-        script: 'terraform output -raw postgres_endpoint',
-    returnStdout: true
-).trim()
+//           env.POSTGRES_ENDPOINT = sh(
+//         script: 'terraform output -raw postgres_endpoint',
+//     returnStdout: true
+// ).trim()
 
-     echo "Postgres Endpoint: ${env.POSTGRES_ENDPOINT}"
+     // echo "Postgres Endpoint: ${env.POSTGRES_ENDPOINT}"
      echo "Backend IP: ${env.BACKEND_IP}"
      echo "Web IPs: ${env.WEB_IPS}"
       }
@@ -97,23 +100,21 @@ pipeline {
     stage('Deploy Nginx + Reverse Proxy') {
       when { expression { params.ACTION == 'apply' } }
       steps {
-        sshagent(credentials: ['AWS_SSH_KEY']) {
+        script {
+          sshagent(credentials: ['AWS_SSH_KEY']) {
           sh """
           for ip in \$(echo '${env.WEB_IPS}' | jq -r '.[]'); do
             echo "Configuring Nginx on \$ip"
 
-            ssh -o StrictHostKeyChecking=no ec2-user@\${ip} << EOF
-              sudo yum install -y nginx git
-              sudo systemctl enable nginx
-              sudo systemctl start nginx
-
+            ssh -o StrictHostKeyChecking=no ec2-user@\${ip} << 'EOF'
               rm -rf /tmp/fruits
-              git clone https://github.com/techbleat/fruits-veg_market.git /tmp/fruits
+              git clone https://github.com/ajanakueniola-commits/fruits-veg_market.git /tmp/fruits
+              cd fruits-veg_market/frontend
+             
+              sed -i 's|http://localhost|https://${env.BACKEND_IP}|g' index.html
+              sudo cp index.html /usr/share/nginx/html/
 
-              sudo rm -rf /usr/share/nginx/html/*
-              sudo cp -r /tmp/fruits/* /usr/share/nginx/html/
-
-              sudo tee /etc/nginx/conf.d/reverse.conf > /dev/null << EOL
+              sudo tee /etc/nginx/nginx.conf> /dev/null << EOL
 server {
     listen 80;
     server_name enny4life.duckdns.org;
@@ -122,13 +123,13 @@ server {
     index index.html;
 
     location / {
-        try_files \\$uri \\$uri/ /index.html;
+        try_files \\\$uri \\\$uri/ /index.html;
     }
 
     location /api/ {
         proxy_pass http://${env.BACKEND_IP}:8000/;
-        proxy_set_header Host \\$host;
-        proxy_set_header X-Real-IP \\$remote_addr;
+        proxy_set_header Host \\\$host;
+        proxy_set_header X-Real-IP \\\$remote_addr;
     }
 }
 EOL
@@ -141,7 +142,7 @@ EOF
         }
       }
     }
-
+    }
     stage('Terraform Destroy') {
       when { expression { params.ACTION == 'destroy' } }
       steps {
