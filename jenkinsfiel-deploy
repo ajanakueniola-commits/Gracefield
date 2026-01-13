@@ -1,0 +1,94 @@
+pipeline {
+  agent any
+
+  environment {
+    AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
+    AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
+    AWS_REGION           = 'us-east-2'
+    AWS_SSH_KEY          = credentials('AWS_SSH_KEY')
+  }
+
+  stages {
+
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Get IPs from Terraform') {
+      steps {
+        dir('terraform') {
+          script {
+            env.BACKEND_IP = sh(
+              script: "terraform output -json backend_private_ips | jq -r '.[0]'",
+              returnStdout: true
+            ).trim()
+
+            env.WEB_IPS = sh(
+              script: "terraform output -json web_server_ips",
+              returnStdout: true
+            ).trim()
+          }
+
+          echo "Backend IP: ${env.BACKEND_IP}"
+          echo "Web IPs: ${env.WEB_IPS}"
+        }
+      }
+    }
+
+    stage('Deploy Nginx + Reverse Proxy') {
+      steps {
+        script {
+          sshagent(credentials: ['AWS_SSH_KEY']) {
+            sh """
+            for ip in \$(echo '${env.WEB_IPS}' | jq -r '.[]'); do
+              echo "Configuring Nginx on \$ip"
+
+              ssh -o StrictHostKeyChecking=no ec2-user@\${ip} << 'EOF'
+                rm -rf /tmp/fruits
+                git clone https://github.com/ajanakueniola-commits/fruits-veg_market.git /tmp/fruits
+                cd /tmp/fruits/frontend
+
+                sed -i 's|http://localhost|http://${env.BACKEND_IP}|g' index.html
+
+                sudo rm -rf /usr/share/nginx/html/*
+                sudo cp index.html /usr/share/nginx/html/
+
+                sudo tee /etc/nginx/conf.d/app.conf > /dev/null << EOL
+server {
+    listen 80;
+    server_name enny4life.duckdns.org;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files \\\$uri \\\$uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://${env.BACKEND_IP}:8000/;
+        proxy_set_header Host \\\$host;
+        proxy_set_header X-Real-IP \\\$remote_addr;
+    }
+}
+EOL
+
+                sudo nginx -t
+                sudo systemctl restart nginx
+EOF
+            done
+            """
+          }
+        }
+      }
+    }
+
+  }
+
+  post {
+    success { echo 'Web deployment successful 🚀' }
+    failure { echo 'Web deployment failed ❌' }
+  }
+}
