@@ -68,38 +68,8 @@ resource "aws_subnet" "grace_private" {
 ####################
 # Route Table
 ####################
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.grace_vpc.id
 
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id
-  }
-}
 
-resource "aws_route_table_association" "public" {
-  count          = 2
-  subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public.id
-}
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.grace_vpc.id
-
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.grace.id
-  }
-
-  tags = {
-    Name = "grace-private-rt"
-  }
-}
-
-resource "aws_route_table_association" "private" {
-  count          = 2
-  subnet_id      = aws_subnet.grace_private[count.index].id
-  route_table_id = aws_route_table.private.id
-}
 ####################
 # Security Groups
 ####################
@@ -123,23 +93,69 @@ resource "aws_security_group" "grace" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
+#####################
+# NAT Gateway Setup
+#####################
 resource "aws_eip" "nat" {
   domain = "vpc"
-  tags = {
-    Name = "grace-nat-eip"
-  }
 }
+
 resource "aws_nat_gateway" "grace" {
   allocation_id = aws_eip.nat.id
   subnet_id     = aws_subnet.public[0].id
 
+  depends_on = [aws_internet_gateway.igw]
   tags = {
     Name = "grace-nat"
   }
-
-  depends_on = [aws_internet_gateway.igw]
 }
+
+#####################
+# Public Route Table
+#####################
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.grace_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+
+  tags = {
+    Name = "grace-public-rt"
+  }
+}
+
+resource "aws_route_table_association" "public" {
+  count          = 2
+  subnet_id      = aws_subnet.public[count.index].id
+  route_table_id = aws_route_table.public.id
+}
+
+#####################
+# Private Route Table
+#####################
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.grace_vpc.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.grace.id
+  }
+
+  tags = {
+    Name = "grace-private-rt"
+  }
+}
+
+resource "aws_route_table_association" "private" {
+  count          = 2
+  subnet_id      = aws_subnet.grace_private[count.index].id
+  route_table_id = aws_route_table.private.id
+}
+
+
+
 
 ####################
 # NGINX Instances (Public)
