@@ -106,17 +106,14 @@ pipeline {
           for ip in \$(echo '${env.WEB_IPS}' | jq -r '.[]'); do
             echo "Configuring Nginx on \$ip"
 
-            ssh -o StrictHostKeyChecking=no ec2-user@\${ip} << EOF
-              sudo yum install nginx -y 
-              sudo yum install git -y
-              sudo systemctl enable nginx
-              sudo systemctl start nginx
-
+            ssh -o StrictHostKeyChecking=no ec2-user@\${ip} << 'EOF'
               rm -rf /tmp/fruits
               git clone https://github.com/ajanakueniola-commits/fruits-veg_market.git /tmp/fruits
-
+              cd fruits-veg_market/frontend
+             
+              sed -i 's|http://localhost|https://${env.BACKEND_IP}|g' index.html
               sudo rm -rf /usr/share/nginx/html/*
-              sudo cp -r /tmp/fruits/* /usr/share/nginx/html/
+              sudo cp index.html /usr/share/nginx/html/
 
               sudo tee /etc/nginx/nginx.conf> /dev/null << EOL
 server {
