@@ -136,7 +136,7 @@ server {
         proxy_set_header X-Real-IP \\\$remote_addr;
     }
 }
-EOF
+EOL
 
               sudo nginx -t
               sudo systemctl restart nginx
