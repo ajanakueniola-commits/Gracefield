@@ -139,7 +139,7 @@ pipeline {
       }
     }
 
-    stage('Deploy Frontend + Nginx') {
+    stage('Deploy Frontend and Nginx') {
       when { expression { params.DEPLOY_FRONTEND } }
       steps {
         script {
@@ -148,7 +148,7 @@ pipeline {
             for ip in \$(echo '${env.WEB_IPS}' | jq -r '.[]'); do
               echo "Deploying to \$ip"
 
-              ssh -o StrictHostKeyChecking=no ec2-user@\${ip} << 'EOF'
+              ssh -o StrictHostKeyChecking=no ec2-user@\${ip} << EOF
                 sudo rm -rf /tmp/fruits
                 git clone -b ${params.GIT_BRANCH} https://github.com/ajanakueniola-commits/fruits-veg_market.git /tmp/fruits
                 cd /tmp/fruits/frontend
@@ -172,8 +172,8 @@ server {
 
     location /api/ {
         proxy_pass http://${env.BACKEND_IP}:${params.API_PORT}/;
-        proxy_set_header Host \\$host;
-        proxy_set_header X-Real-IP \\$remote_addr;
+        proxy_set_header Host \\\$host;
+        proxy_set_header X-Real-IP \\\$remote_addr;
     }
 }
 EOL
@@ -191,7 +191,7 @@ EOF
   }
 
   post {
-    success { echo 'Web deployment successful 🚀' }
-    failure { echo 'Web deployment failed ❌' }
+    success { echo 'Web deployment successful' }
+    failure { echo 'Web deployment failed' }
   }
 }
