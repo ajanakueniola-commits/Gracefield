@@ -118,7 +118,7 @@ pipeline {
               sudo rm -rf /usr/share/nginx/html/*
               sudo cp -r /tmp/fruits/* /usr/share/nginx/html/
 
-              sudo tee /etc/nginx/conf.d/reverse.conf > /dev/null << EOL
+              sudo tee /etc/nginx/nginx.conf> /dev/null << EOL
 server {
     listen 80;
     server_name enny4life.duckdns.org;
