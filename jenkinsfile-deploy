@@ -8,6 +8,13 @@ pipeline {
     AWS_SSH_KEY          = credentials('AWS_SSH_KEY')
   }
 
+  parameters {
+    string(name: 'GIT_BRANCH', defaultValue: 'main', description: 'Git branch to deploy')
+    booleanParam(name: 'DEPLOY_FRONTEND', defaultValue: true, description: 'Deploy frontend UI')
+    string(name: 'DOMAIN_NAME', defaultValue: 'enny4life.duckdns.org', description: 'Public domain name')
+    string(name: 'API_PORT', defaultValue: '8000', description: 'Backend API port')
+  }
+
   stages {
 
     stage('Checkout') {
@@ -37,20 +44,21 @@ pipeline {
       }
     }
 
-    stage('Deploy Nginx + Reverse Proxy') {
+    stage('Deploy Frontend and Nginx') {
+      when { expression { params.DEPLOY_FRONTEND } }
       steps {
         script {
           sshagent(credentials: ['AWS_SSH_KEY']) {
             sh """
             for ip in \$(echo '${env.WEB_IPS}' | jq -r '.[]'); do
-              echo "Configuring Nginx on \$ip"
+              echo "Deploying to \$ip"
 
-              ssh -o StrictHostKeyChecking=no ec2-user@\${ip} << 'EOF'
-                rm -rf /tmp/fruits
-                git clone https://github.com/ajanakueniola-commits/fruits-veg_market.git /tmp/fruits
+              ssh -o StrictHostKeyChecking=no ec2-user@\${ip} << EOF
+                sudo rm -rf /tmp/fruits
+                git clone -b ${params.GIT_BRANCH} https://github.com/ajanakueniola-commits/fruits-veg_market.git /tmp/fruits
                 cd /tmp/fruits/frontend
 
-                sed -i 's|http://localhost|http://${env.BACKEND_IP}|g' index.html
+                sed -i 's|http://localhost|http://${env.BACKEND_IP}:${params.API_PORT}|g' index.html
 
                 sudo rm -rf /usr/share/nginx/html/*
                 sudo cp index.html /usr/share/nginx/html/
@@ -58,7 +66,7 @@ pipeline {
                 sudo tee /etc/nginx/conf.d/app.conf > /dev/null << EOL
 server {
     listen 80;
-    server_name enny4life.duckdns.org;
+    server_name ${params.DOMAIN_NAME};
 
     root /usr/share/nginx/html;
     index index.html;
@@ -68,7 +76,7 @@ server {
     }
 
     location /api/ {
-        proxy_pass http://${env.BACKEND_IP}:8000/;
+        proxy_pass http://${env.BACKEND_IP}:${params.API_PORT}/;
         proxy_set_header Host \\\$host;
         proxy_set_header X-Real-IP \\\$remote_addr;
     }
@@ -88,7 +96,7 @@ EOF
   }
 
   post {
-    success { echo 'Web deployment successful 🚀' }
-    failure { echo 'Web deployment failed ❌' }
+    success { echo 'Web deployment successful' }
+    failure { echo 'Web deployment failed' }
   }
 }
