@@ -92,6 +92,13 @@ resource "aws_security_group" "grace" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  egress {
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+}
+
 }
 #####################
 # NAT Gateway Setup
@@ -154,9 +161,6 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }
 
-
-
-
 ####################
 # NGINX Instances (Public)
 ####################
@@ -170,13 +174,29 @@ resource "aws_instance" "nginx" {
   key_name                    = var.key_name
   
   user_data = <<-EOF
-    #!/bin/bash
-    yum update -y
-    amazon-linux-extras install -y nginx1
-    systemctl enable nginx
-    systemctl start nginx
-    echo "Hello from nginx instance ${count.index}" > /usr/share/nginx/html/index.html
-  EOF
+                #!/bin/bash
+               
+                echo "Starting Nginx installation..."
+                
+                # Update system
+                sudo yum update -y
+                
+                # Install Nginx
+                sudo amazon-linux-extras install nginx1 -y
+                
+                # Create custom landing page
+  
+                
+                # Start Nginx
+                sudo systemctl enable nginx
+                sudo systemctl start nginx
+                
+                # Check if Nginx is running
+                sudo systemctl status nginx
+                
+                echo "Nginx installation completed!"
+EOF
+
 
   tags = { Name = "nginx-${count.index}" }
 }

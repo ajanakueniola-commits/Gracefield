@@ -107,7 +107,8 @@ pipeline {
             echo "Configuring Nginx on \$ip"
 
             ssh -o StrictHostKeyChecking=no ec2-user@\${ip} << EOF
-              sudo yum install -y nginx git
+              sudo yum install nginx -y 
+              sudoyum install git -y
               sudo systemctl enable nginx
               sudo systemctl start nginx
 
