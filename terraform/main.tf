@@ -168,7 +168,7 @@ resource "aws_instance" "nginx" {
   vpc_security_group_ids      = [aws_security_group.grace.id]
   associate_public_ip_address = true
   key_name                    = var.key_name
-
+  
   user_data = <<-EOF
     #!/bin/bash
     yum update -y
